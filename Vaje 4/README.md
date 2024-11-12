@@ -1,0 +1,13 @@
+# Naloga
+- Napišite program, ki deluje kot preprosta ukazna vrstica in v neskončni zanki izvaja vnesene ukaze.
+- Celoten ukaz preberite s standardnega vhoda v znakovni niz. Lahko predpostavite, da ukazni niz ni daljši od 1024 znakov. Za branje lahko uporabite fgets() ali pa kar read().
+- Za posamezen ukaz naj proces s klicem fork() ustvari otroka, ki s klicem execv() ali execvp() izvrši ukaz.
+- Omogočite izvajanje ukazov z argumenti.
+  - Ukaz razčlenite po presledkih: napišite funkcijo parse(char *niz_ukaz, char *args[]), ki presledke zamenja z '\0', na začetke podnizov pa naj kažejo kazalci args, ki jih boste podali kasneje funkciji execvp(). Npr., ukazni niz *prog1 -w argh* ima tri argumente: args[0] je *prog1*, args[1] je *-w*, args[2] je *argh*, args[3] pa naj bo *NULL*.
+  - Namesto ročnega razčlenjevanja lahko uporabimo tudi funkcijo strtok() iz knjižnice string.h.
+  - Za polno točko uporabite obe opciji (parse za lihe ukaze po vrsti, strtok pa za sode)
+  - Če naredite samo en način, dobite 0,85 točke.
+- Lahko predpostavite, da argumentov ne bo več kot 64.
+- Otrok naj ne postane zombi(e).
+- Program se zaključi ob pritisku CTRL+D.
+- Program naj lovi signala SIGINT in SIGUSR1 in ob tem izpiše ustrezno obvestilo. 
