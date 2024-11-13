@@ -8,8 +8,10 @@
 
 #define buffer_size 1024
 #define argument_size 64
+
 char input[buffer_size];
 char pwd[buffer_size];
+int commandCounter;
 
 void handle_sigint(int sig);
 void handle_sigusr1(int sig);
@@ -18,6 +20,7 @@ void parse2(char *niz_ukaz, char *args[]);
 void setPwd();
 
 int main(){
+    commandCounter = 0;
     setPwd();
     signal(SIGINT, handle_sigint);
     signal(SIGUSR1, handle_sigusr1);
@@ -30,9 +33,15 @@ int main(){
         }
         input[strcspn(input, "\n")] = '\0';
         int status = fork();
+        commandCounter++;
         if(status == 0){
             char *args[argument_size];
-            parse2(input, args);
+            if(commandCounter % 2 == 0){
+                parse(input, args);
+            } else {
+                parse2(input, args);
+            }
+
             if(execvp(args[0], args) < 0){
                 printf("Command not found\n");
             }
