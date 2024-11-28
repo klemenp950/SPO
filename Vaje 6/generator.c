@@ -38,7 +38,8 @@ int main(){
     }
 
     arg.val = 1; //1 procees naenkrat lahko zaklene semafor. 
-	if ( (semctl( semid, 0, SETVAL, arg)) < 0)
+	
+    if ( (semctl( semid, 0, SETVAL, arg)) < 0)
 		perror("semctl");
 
     if ( (shmid = shmget( key_shm, 2048, 0644 | IPC_CREAT)) < 0){
@@ -62,7 +63,7 @@ int main(){
         unlock(semid);
     }
     
-    addr = '\0';
+    strcpy(addr, "\0");
     
     return 0;
 }
@@ -76,6 +77,7 @@ void lock(int semid){
     operacije[0].sem_flg = 0;
     if ( semop( semid, operacije, 1) < 0){
         perror("semop");
+        exit(1);
     }
 }
 
@@ -87,5 +89,6 @@ void unlock(int semid){
     operacije[0].sem_flg = 0;
     if ( semop( semid, operacije, 1) < 0){
         perror("semop");
+        exit(1);
     }
 }

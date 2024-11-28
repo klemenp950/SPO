@@ -35,13 +35,29 @@ int main(int argc, char *argv[]){
         perror("msgget");
     }
 
-    do
+    char prev[2048] = "";
+
+    while (1)
     {
-        if((msgrcv(msqid, &msgbuf, sizeof(msgbuf.mtext), 0, 0)) < 0){
+        if((msgrcv(msqid, &msgbuf.mtext, sizeof(msgbuf.mtext), 0, 0)) < 0){
             perror("msgrcv");
         }
-        dprintf(fd, "%s", msgbuf.mtext);
-    } while (msgbuf.mtext != "\0");
+
+        if (msgbuf.mtext[0] == '\0')
+        {
+            break;
+        }
+        
+
+        if (strcmp(prev, msgbuf.mtext) != 0)
+        {
+            printf("%s\n", msgbuf.mtext);
+            write(fd, msgbuf.mtext, strlen(msgbuf.mtext));
+            strcpy(prev, msgbuf.mtext);
+        }
+    }
+    
+    
     
     msgctl(msqid, IPC_RMID, NULL);
 

@@ -27,6 +27,7 @@ int main() {
     int semid;
     int msqid;
 
+    // Create key for semaphore, shared memory and message queue
     if ((key_shm = ftok("/usr", 'a')) < 0) {
         fprintf(stderr, "Error: ftok 1\n");
         exit(1);
@@ -41,7 +42,7 @@ int main() {
         fprintf(stderr, "Error: ftok 3\n");
         exit(1);
     }
-
+     // Create semaphore, shared memory and message queue
     if ((semid = semget(key_sem, 1, 0644 | IPC_CREAT)) < 0) {
         perror("semget");
         exit(1);
@@ -63,27 +64,33 @@ int main() {
         exit(1);
     }
 
-    addr = shmat(shmid, 0 /* kernel chooses address */, 0);
-    if (addr == (void *)-1) {
+
+    addr = (char *) shmat(shmid, 0 /* kernel chooses address */, 0);
+    if(addr == (void *)-1) {
         perror("shmat");
         exit(1);
     }
 
     char prev[2048] = "";
-    do {
+    while (1) {
         lock(semid);
-        if (addr[0] == '\0') { // Check if the first character is '\0'
+        if (addr[0] == '\0') { 
             unlock(semid);
-            break;
+            if((msgsnd(msqid, addr, strlen(addr) + 1, 0)) < 0) {
+                perror("msgsnd");
+            }
+            break; // Exit loop
         }
-        if (strcmp(addr, prev) != 0) {
-            send(msqid, addr);
+        if (strcmp(prev, addr) != 0) { 
             printf("%s\n", addr);
             strcpy(prev, addr);
         }
+        if((msgsnd(msqid, addr, strlen(addr) + 1, 0)) < 0) {
+                perror("msgsnd");
+            }
         unlock(semid);
         sleep(1);
-    } while (1);
+    }
 
     send(msqid, addr);
 
