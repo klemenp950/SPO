@@ -89,34 +89,28 @@ void blackjack(int sockfd){
 
     while(igralec < 21) {
         printf("Še ena karta? (da/ne)\n");
-        write(sockfd, "Še ena karta? (H/S)\n\0", strlen("Še ena karta? (H/S)\n\0"));
-        char odgovor[10] = {0};
-        // scanf("%s", odgovor);
-        int n = read(sockfd, odgovor, sizeof(odgovor));
-        odgovor[n - 1] = '\0';
-        printf("DEBUG-odgovor: %s.\n", odgovor);
+        write(sockfd, "Še ena karta? (H/S)\n", strlen("Še ena karta? (H/S)\n"));
+        char odgovor[10] = {0}; // Initialize the buffer to zero
+        int bytes_read = read(sockfd, odgovor, sizeof(odgovor) - 1); // Leave space for null terminator
+        if (bytes_read < 0) {
+            perror("read");
+            close(sockfd);
+            return;
+        }
+        odgovor[bytes_read] = '\0'; // Null-terminate the received string
         sleep(1);
         if(strcmp(odgovor, "H") == 0) {
             deal_to_player(&igralec, sockfd);
             if(igralec > 21) {
                 char buffer[100];
                 snprintf(buffer, sizeof(buffer), "BUST: %2d\n", igralec);
-                // printf("BUST: %d\n", igralec);
                 write(sockfd, buffer, strlen(buffer));
                 close(sockfd);
                 return;
             }
-        } else if (strcmp(odgovor, "S") == 0)
-        {
+        } else if (strcmp(odgovor, "S") == 0) {
             break;
         }
-        printf("Prišel do spremembe odgovora: %s.\n", odgovor);
-        odgovor[0] = '\0';
-        printf("DEBUG-odgovor2: %s.\n", odgovor);
-    }
-
-    if(igralec == 21) {
-        return;
     }
 
     while(hisa < 17) {
@@ -124,62 +118,37 @@ void blackjack(int sockfd){
     }
 
     if(hisa > 21) {
-        // printf("Hisa bust: %d\n", hisa);
         char buffer[100];
         snprintf(buffer, sizeof(buffer), "Hisa bust: %2d\n", hisa);
         write(sockfd, buffer, strlen(buffer));
-        // printf("WIN!\n");
         write(sockfd, "WIN\n", strlen("WIN\n"));
         close(sockfd);
         return;
     }
 
     if(igralec > hisa) {
-        printf("WIN!\n");
         write(sockfd, "WIN\n", strlen("WIN\n"));
-
         char buffer[100];
-
         snprintf(buffer, sizeof(buffer), "Tvoja vrednost: %d\n", igralec);
         write(sockfd, buffer, strlen(buffer));
-        printf("Tvoja vrednost: %d\n", igralec);
-
         snprintf(buffer, sizeof(buffer), "Vrednost hiše: %2d\n", hisa);
         write(sockfd, buffer, strlen(buffer));
-        printf("Vrednost hiše: %d\n", hisa);
-
-        close(sockfd);
     } else if(igralec == hisa) {
-        printf("SPLIT!\n");
-        write(sockfd, "SPLIT\n\0", strlen("SPLIT\n\0"));
-
+        write(sockfd, "SPLIT\n", strlen("SPLIT\n"));
         char buffer[100];
-
-        printf("Tvoja vrednost: %d\n", igralec);
         snprintf(buffer, sizeof(buffer), "Tvoja vrednost: %d\n", igralec);
         write(sockfd, buffer, strlen(buffer));
-
-        printf("Vrednost hiše: %d\n", hisa);
         snprintf(buffer, sizeof(buffer), "Vrednost hiše: %d\n", hisa);
         write(sockfd, buffer, strlen(buffer));
-
-        close(sockfd);
     } else {
-        printf("LOSS!\n");
         write(sockfd, "LOSS!\n", strlen("LOSS!\n"));
-
         char buffer[100];
-
         snprintf(buffer, sizeof(buffer), "Tvoja vrednost: %d\n", igralec);
         write(sockfd, buffer, strlen(buffer));
-        printf("Tvoja vrednost: %d\n", igralec);
-
         snprintf(buffer, sizeof(buffer), "Vrednost hiše: %2d\n", hisa);
         write(sockfd, buffer, strlen(buffer));
-        printf("Vrednost hiše: %d\n", hisa);
-
-        close(sockfd);
     }
+    close(sockfd);
 }
 
 

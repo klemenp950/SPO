@@ -2,9 +2,9 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <arpa/inet.h>
 #include <unistd.h>
+#include <arpa/inet.h>
+#include <string.h>
 
 int Connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 int Socket(int domain, int type, int protocol);
@@ -21,19 +21,19 @@ int main(){
 
     char buffer[1024];
     int temp;
-    while((temp = read(sockfd, buffer, sizeof(buffer))) > 0) {
+    while((temp = read(sockfd, buffer, sizeof(buffer) - 1)) > 0) {
         buffer[temp] = '\0';
         printf("%s", buffer);
-        if (strcmp(buffer, "Še ena karta? (H/S)\n") == 0)
-        {
-            char odgovor[2];
+        if (strstr(buffer, "Še ena karta? (H/S)\n") != NULL) {
+            char odgovor[10];
             scanf("%s", odgovor);
-            write(sockfd, odgovor, sizeof(odgovor));
+            write(sockfd, odgovor, strlen(odgovor));
         }
     }
-    
-}
 
+    close(sockfd);
+    return 0;
+}
 
 int Connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
     int ret = connect(sockfd, addr, addrlen);
