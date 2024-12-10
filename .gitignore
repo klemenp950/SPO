@@ -1,1 +1,5 @@
+# Ignore all files
+*
+
+# Except files ending with .c
 !*.c
