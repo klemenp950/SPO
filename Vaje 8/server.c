@@ -91,13 +91,13 @@ void blackjack(int sockfd){
         printf("Še ena karta? (da/ne)\n");
         write(sockfd, "Še ena karta? (H/S)\n", strlen("Še ena karta? (H/S)\n"));
         char odgovor[10] = {0}; // Initialize the buffer to zero
-        int bytes_read = read(sockfd, odgovor, sizeof(odgovor) - 1); // Leave space for null terminator
+        int bytes_read = read(sockfd, odgovor, sizeof(odgovor) - 1); 
         if (bytes_read < 0) {
             perror("read");
             close(sockfd);
             return;
         }
-        odgovor[bytes_read] = '\0'; // Null-terminate the received string
+        odgovor[bytes_read] = '\0';
         sleep(1);
         if(strcmp(odgovor, "H") == 0) {
             deal_to_player(&igralec, sockfd);

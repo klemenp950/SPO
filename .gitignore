@@ -3,3 +3,5 @@
 
 # Except files ending with .c
 !*.c
+
+!*/
