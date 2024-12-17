@@ -9,20 +9,22 @@
 #include <sys/wait.h>
 #include <signal.h>
 
-
 #define MAX_LEN 1024
 
 int Socket(int domain, int type, int protocol);
 int Bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 int Listen(int sockfd, int backlog);
 int Accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
-void* handle_client(int* connfd, struct sockaddr_in* addr);
+void handle_client(int connfd, struct sockaddr_in addr);
 pid_t Fork();
-void sig_chld();
+void sig_chld(int signo);
 
 int main(int argc , char* argv[]){
     signal(SIGCHLD, sig_chld);
     int sockfd = Socket(AF_INET, SOCK_STREAM, 0);
+
+    int optval = 1;
+    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
 
     struct sockaddr_in addr;
     addr.sin_family = AF_INET;
@@ -42,11 +44,12 @@ int main(int argc , char* argv[]){
         int connfd = Accept(sockfd, NULL, NULL);
         pid_t pid = Fork();
 
-        if(pid == 0){ //Otrok
-            handle_client(&connfd, &addr);
+        if(pid == 0){ // Child process
+            handle_client(connfd, addr);
             close(connfd);
             exit(0);
         } 
+        close(connfd);
     }
 }
 
@@ -97,10 +100,10 @@ pid_t Fork() {
     return pid;
 }
 
-void* handle_client(int* connfd, struct sockaddr_in* addr){
+void handle_client(int connfd, struct sockaddr_in addr){
     char buffer_read[MAX_LEN];
     int temp;
-    while ((temp = read(*connfd, buffer_read, MAX_LEN - 1)) > 0)
+    while ((temp = read(connfd, buffer_read, sizeof(buffer_read) - 1)) > 0)
     {
         buffer_read[temp] = '\0';
         int i = atoi(buffer_read);
@@ -108,29 +111,28 @@ void* handle_client(int* connfd, struct sockaddr_in* addr){
         char buffer_write[MAX_LEN];
         if(getpid() % i == 0){
             snprintf(buffer_write, sizeof(buffer_write), "Nit %d: Čestitam, dobili ste nagrado!\n", i);
-            write(*connfd, buffer_write, strlen(buffer_write));
+            write(connfd, buffer_write, strlen(buffer_write));
+            close(connfd);
+
         } else {
             snprintf(buffer_write, sizeof(buffer_write), "Nit %d: Važno je sodelovati, ne zmagati.\n", i);
-            write(*connfd, buffer_write, strlen(buffer_write));
+            write(connfd, buffer_write, strlen(buffer_write));
+            close(connfd);
         }
 
         char ip_str[MAX_LEN];
-        inet_ntop(AF_INET, &addr->sin_addr, ip_str, INET_ADDRSTRLEN);
+        inet_ntop(AF_INET, &addr.sin_addr, ip_str, INET_ADDRSTRLEN);
 
-        printf("Otrok %d streznika sem stregel niti %i odjemalca (%s:%d)\n", getpid(), i, ip_str, ntohs(addr->sin_port));
-
-        
+        printf("Otrok %d streznika sem stregel niti %i odjemalca (%s:%d)\n", getpid(), i, ip_str, ntohs(addr.sin_port));
     }
-    exit(0);
-    close(*connfd);    
 }
 
 void sig_chld(int signo)
 {
-	pid_t pid;
-	int stat;
-	while((pid = waitpid(-1, &stat, WNOHANG)) > 0)
-		// printf("child %d terminated\n", pid);
-	
-	return;
+    pid_t pid;
+    int stat;
+    while((pid = waitpid(-1, &stat, WNOHANG)) > 0)
+        printf("child %d terminated\n", pid);
+    
+    return;
 }

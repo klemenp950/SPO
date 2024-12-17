@@ -19,7 +19,7 @@ int Socket(int domain, int type, int protocol);
 int main(int argc, char* argv[]){
 
     if(argc != 2){
-        printf("Usage: %s N", argv[0]);
+        printf("Usage: %s N\n", argv[0]);
         exit(1);
     }
 
@@ -36,9 +36,9 @@ int main(int argc, char* argv[]){
     for (int i = 0; i < N; i++)
     {
         pthread_join(thread[i], NULL);
-        printf("Joined thread %d\n", i);
     }
 
+    free(thread);
     return 0;
 }
 
@@ -61,14 +61,15 @@ void* send_to_server(void* arg){
     char buffer_read[MAX_LEN];
     int temp;
 
-    while ((temp = read(sockfd, buffer_read, MAX_LEN - 1)) > 0){
-        buffer_read[temp] = '\0';
-        printf("%s\n", buffer_read);
-    }
 
+    while ((temp = read(sockfd, buffer_read, sizeof(buffer_read) - 1)) > 0){
+        buffer_read[temp] = '\0';
+        printf("%s", buffer_read);
+        temp = read(sockfd, buffer_read, MAX_LEN);
+    }
+    
     close(sockfd);
-    exit(0);
-    return NULL;
+    pthread_exit(NULL);
 }
 
 int Connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
