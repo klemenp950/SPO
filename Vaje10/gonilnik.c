@@ -13,9 +13,6 @@
 
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Your Name");
-MODULE_DESCRIPTION("A simple character device driver");
-MODULE_VERSION("1.0");
 
 static int major_number;
 static int open_count = 0;
@@ -41,7 +38,6 @@ static int __init char_device_init(void) {
 }
 
 static void __exit char_device_exit(void) {
-    open_count = 0;
     unregister_chrdev(major_number, DEVICE_NAME);
     printk(KERN_INFO "Char device unregistered\n");
 }
