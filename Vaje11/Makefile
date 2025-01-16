@@ -1,1 +1,1 @@
-obj-m += gonilnik.o
+obj-m := gonilnik.o
