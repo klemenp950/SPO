@@ -5,21 +5,17 @@
 #include <linux/timer.h>
 #include <linux/uaccess.h>
 
+#define DEVICE_NAME "modul"
+
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Klemen Parkelj");
+MODULE_AUTHOR("Avtor");
 MODULE_VERSION("1.0");
 
-#define DEVICE_NAME "modul"
-#define CLASS_NAME "modul_class"
-
 static int major_number;
-static struct class *modul_class = NULL;
-static struct device *modul_device = NULL;
-
 static struct timer_list led_timer;
 static int LEDon = 0;
 static int SWITCHon = 0;
-static int user_interval = 2000; // Privzeto 2 sekundi
+static int user_interval = 2000; // Default 2 seconds
 
 static void timer_callback(struct timer_list *timer) {
     if (SWITCHon == 1) {
@@ -72,32 +68,15 @@ static int __init modul_init(void) {
         return major_number;
     }
 
-    modul_class = class_create(THIS_MODULE, CLASS_NAME);
-    if (IS_ERR(modul_class)) {
-        unregister_chrdev(major_number, DEVICE_NAME);
-        printk(KERN_ALERT "Failed to register device class\n");
-        return PTR_ERR(modul_class);
-    }
-
-    modul_device = device_create(modul_class, NULL, MKDEV(major_number, 0), NULL, DEVICE_NAME);
-    if (IS_ERR(modul_device)) {
-        class_destroy(modul_class);
-        unregister_chrdev(major_number, DEVICE_NAME);
-        printk(KERN_ALERT "Failed to create the device\n");
-        return PTR_ERR(modul_device);
-    }
-
     timer_setup(&led_timer, timer_callback, 0);
 
-    printk(KERN_INFO "Modul initialized: /dev/%s\n", DEVICE_NAME);
+    printk(KERN_INFO "Modul initialized. Major number: %d\n", major_number);
+    printk(KERN_INFO "Create the device node with: mknod /dev/%s c %d 0\n", DEVICE_NAME, major_number);
     return 0;
 }
 
 static void __exit modul_exit(void) {
     del_timer(&led_timer);
-    device_destroy(modul_class, MKDEV(major_number, 0));
-    class_unregister(modul_class);
-    class_destroy(modul_class);
     unregister_chrdev(major_number, DEVICE_NAME);
 
     printk(KERN_INFO "Modul exited\n");
@@ -105,4 +84,5 @@ static void __exit modul_exit(void) {
 
 module_init(modul_init);
 module_exit(modul_exit);
+
 
